@@ -1,0 +1,1458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Roz Ka Hisaab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#182722;
+    --bg-elevated:#20342D;
+    --bg-panel:#23372F;
+    --line: rgba(240,234,216,0.12);
+    --line-strong: rgba(240,234,216,0.24);
+    --cream:#F0EAD8;
+    --muted:#93A69C;
+    --mustard:#D9A441;
+    --terracotta:#C1592C;
+    --sage:#7FA688;
+    --teal:#4A7A78;
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:transparent;color:var(--cream);}
+  body{
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100%;
+  }
+  .app{
+    max-width:920px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+    background:var(--bg);
+    min-height:100vh;
+    border-radius:18px;
+  }
+  /* ---------- header ---------- */
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:22px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;
+  }
+  .title-block h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(28px,4.5vw,38px);
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+    color:var(--cream);
+  }
+  .title-block .sub{
+    font-size:13px;
+    color:var(--muted);
+    letter-spacing:0.02em;
+  }
+  .stats-strip{
+    display:flex;
+    gap:22px;
+  }
+  .stat{
+    text-align:right;
+  }
+  .stat .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:22px;
+    font-weight:500;
+    color:var(--mustard);
+    line-height:1;
+  }
+  .stat .lbl{
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-top:4px;
+  }
+
+  /* ---------- month nav ---------- */
+  .month-nav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .month-nav .month-label{
+    font-family:'Fraunces',serif;
+    font-size:19px;
+    font-weight:600;
+  }
+  .nav-btns{display:flex; gap:8px; align-items:center;}
+  .icon-btn{
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    color:var(--cream);
+    width:32px;height:32px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .icon-btn:hover{background:rgba(217,164,65,0.15); border-color:var(--mustard);}
+  .icon-btn:focus-visible, .today-btn:focus-visible, .day-cell:focus-visible, .checkbox:focus-visible{
+    outline:2px solid var(--mustard);
+    outline-offset:2px;
+  }
+  .today-btn{
+    background:transparent;
+    border:1px solid var(--line-strong);
+    color:var(--muted);
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    padding:6px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .today-btn:hover{color:var(--cream); border-color:var(--cream);}
+
+  /* ---------- calendar grid ---------- */
+  .weekday-row{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .weekday-row span{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--muted);
+    text-align:center;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:8px;
+  }
+  .day-cell{
+    position:relative;
+    aspect-ratio:1/1;
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    transition:transform .12s ease, border-color .12s ease;
+    padding:4px;
+  }
+  .day-cell:hover{ border-color:var(--line-strong); transform:translateY(-1px);}
+  .day-cell.empty{ background:transparent; border-color:transparent; cursor:default; }
+  .day-cell.empty:hover{ transform:none; }
+  .day-cell.selected{ border-color:var(--mustard); box-shadow:0 0 0 1px var(--mustard); }
+  .day-cell.today .day-num{ color:var(--mustard); font-weight:700; }
+  .day-cell.today::after{
+    content:'';
+    position:absolute; bottom:5px; left:50%; transform:translateX(-50%);
+    width:4px; height:4px; border-radius:50%; background:var(--mustard);
+  }
+  .day-num{
+    font-size:12px;
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--muted);
+    z-index:1;
+  }
+  .lid{
+    width:60%;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--bg-panel);
+    position:relative;
+  }
+  .lid::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:conic-gradient(var(--ring-color,var(--mustard)) calc(var(--pct,0) * 360deg), transparent 0deg);
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  }
+  .lid-core{
+    width:60%; height:60%;
+    border-radius:50%;
+    background:var(--bg);
+    z-index:1;
+  }
+
+  /* ---------- panel ---------- */
+  .panel-overlay{
+    position:fixed; inset:0;
+    background:rgba(10,16,14,0.55);
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:20;
+  }
+  .panel-overlay.open{ opacity:1; pointer-events:auto; }
+  .panel{
+    position:fixed;
+    top:0; right:0;
+    height:100%;
+    width:min(380px,92vw);
+    background:var(--bg-panel);
+    border-left:1px solid var(--line-strong);
+    transform:translateX(100%);
+    transition:transform .25s ease;
+    z-index:21;
+    display:flex;
+    flex-direction:column;
+    padding:22px 20px 20px;
+    overflow-y:auto;
+  }
+  .panel.open{ transform:translateX(0); }
+  .panel-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:4px;
+  }
+  .panel-date{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    font-weight:600;
+  }
+  .panel-workout{
+    font-size:12.5px;
+    color:var(--mustard);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    margin-top:4px;
+  }
+  .close-btn{
+    background:none; border:none; color:var(--muted);
+    font-size:20px; cursor:pointer; line-height:1;
+    padding:2px 6px;
+  }
+  .close-btn:hover{ color:var(--cream); }
+  .section-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    color:var(--muted);
+    margin:20px 0 8px;
+  }
+  .checklist{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .check-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:10px 12px;
+    cursor:pointer;
+  }
+  .check-row:hover{ border-color:var(--line-strong); }
+  .checkbox{
+    width:18px; height:18px;
+    border-radius:5px;
+    border:1.5px solid var(--muted);
+    background:transparent;
+    flex:none;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .checkbox.checked{
+    background:var(--sage);
+    border-color:var(--sage);
+  }
+  .checkbox.checked::after{
+    content:'';
+    width:5px; height:9px;
+    border:solid var(--bg);
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg) translate(-1px,-1px);
+  }
+  .check-label{
+    font-size:13.5px;
+    line-height:1.35;
+    flex:1;
+  }
+  .check-label.done{ color:var(--muted); text-decoration:line-through; }
+  .demo-btn{
+    flex:none;
+    background:transparent;
+    border:1px solid var(--line-strong);
+    color:var(--mustard);
+    font-family:'Inter',sans-serif;
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    padding:5px 9px;
+    border-radius:7px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .demo-btn:hover{ background:rgba(217,164,65,0.15); border-color:var(--mustard); }
+  .panel-footer{
+    margin-top:auto;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+  }
+  .panel-footer b{ color:var(--cream); font-family:'IBM Plex Mono',monospace; font-weight:500;}
+
+  /* ---------- summary modal ---------- */
+  .summary-btn{
+    background:var(--bg-elevated);
+    border:1px solid var(--line-strong);
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:500;
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .summary-btn:hover{ border-color:var(--mustard); color:var(--mustard); }
+  .summary-overlay{
+    position:fixed; inset:0;
+    background:rgba(10,16,14,0.6);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:30;
+    padding:20px;
+  }
+  .summary-overlay.open{ opacity:1; pointer-events:auto; }
+  .summary-modal{
+    background:var(--bg-panel);
+    border:1px solid var(--line-strong);
+    border-radius:18px;
+    width:min(480px,100%);
+    max-height:88vh;
+    overflow-y:auto;
+    padding:22px 22px 20px;
+  }
+  .summary-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:14px;
+  }
+  .summary-title{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    font-weight:600;
+  }
+  .summary-tabs{
+    display:flex;
+    gap:6px;
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:3px;
+    margin-bottom:16px;
+  }
+  .summary-tab{
+    flex:1;
+    text-align:center;
+    padding:7px 0;
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--muted);
+    background:transparent;
+    border:none;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  .summary-tab.active{
+    background:var(--mustard);
+    color:var(--bg);
+  }
+  .summary-range{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .summary-range-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .summary-cards{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .summary-card{
+    background:var(--bg-elevated);
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+  }
+  .summary-card .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:20px;
+    color:var(--mustard);
+    font-weight:500;
+  }
+  .summary-card .lbl{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:3px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .summary-section-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    color:var(--muted);
+    margin:4px 0 8px;
+  }
+  .day-bar-row{
+    display:grid;
+    grid-template-columns:56px 1fr 34px;
+    align-items:center;
+    gap:10px;
+    padding:5px 0;
+  }
+  .day-bar-row.future{ opacity:0.35; }
+  .day-bar-label{
+    font-size:11.5px;
+    color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .day-bar-track{
+    height:7px;
+    background:var(--bg-elevated);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .day-bar-fill{
+    height:100%;
+    border-radius:4px;
+    background:var(--mustard);
+  }
+  .day-bar-fill.full{ background:var(--sage); }
+  .day-bar-pct{
+    font-size:11px;
+    color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+    text-align:right;
+  }
+  .summary-empty{
+    color:var(--muted);
+    font-size:12.5px;
+    padding:10px 0 4px;
+  }
+
+  /* ---------- exercise demo modal ---------- */
+  .demo-overlay{
+    position:fixed; inset:0;
+    background:rgba(10,16,14,0.65);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:40;
+    padding:20px;
+  }
+  .demo-overlay.open{ opacity:1; pointer-events:auto; }
+  .demo-modal{
+    background:var(--bg-panel);
+    border:1px solid var(--line-strong);
+    border-radius:18px;
+    width:min(340px,100%);
+    max-height:90vh;
+    overflow-y:auto;
+    padding:20px 22px 22px;
+  }
+  .demo-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:6px;
+  }
+  .demo-title{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    font-weight:600;
+    line-height:1.3;
+    padding-right:10px;
+  }
+  .demo-video-box{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background:var(--bg-elevated);
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius-sm);
+    padding:14px;
+    margin:12px 0 18px;
+    text-decoration:none;
+    color:var(--cream);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .demo-video-box:hover{ border-color:var(--mustard); background:rgba(217,164,65,0.08); }
+  .demo-video-icon{
+    flex:none;
+    width:38px; height:38px;
+    border-radius:50%;
+    background:var(--mustard);
+    color:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
+  .demo-video-text{ flex:1; display:flex; flex-direction:column; gap:2px; }
+  .demo-video-title{ font-size:13.5px; font-weight:600; }
+  .demo-video-sub{ font-size:11.5px; color:var(--muted); line-height:1.35; }
+  .demo-video-arrow{ flex:none; color:var(--muted); font-size:16px; }
+  .demo-section-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    color:var(--muted);
+    margin:0 0 8px;
+  }
+  .demo-cues{
+    list-style:none;
+    margin:0; padding:0;
+    display:flex; flex-direction:column; gap:7px;
+  }
+  .demo-cues li{
+    font-size:13px;
+    line-height:1.4;
+    color:var(--cream);
+    padding-left:16px;
+    position:relative;
+  }
+  .demo-cues li::before{
+    content:'';
+    position:absolute; left:0; top:6px;
+    width:5px; height:5px;
+    border-radius:50%;
+    background:var(--sage);
+  }
+
+  /* ---------- legend / footer ---------- */
+  .legend{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:20px;
+    font-size:11.5px;
+    color:var(--muted);
+    align-items:center;
+  }
+  .legend-dot{
+    width:8px;height:8px;border-radius:50%;
+    display:inline-block;
+    margin-right:6px;
+    vertical-align:middle;
+  }
+  .reset-link{
+    margin-left:auto;
+    background:none;
+    border:none;
+    color:var(--muted);
+    font-size:11.5px;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+  .reset-link:hover{ color:var(--terracotta); }
+
+  .loading{
+    text-align:center;
+    color:var(--muted);
+    padding:60px 0;
+    font-size:13px;
+  }
+
+  @media (max-width:600px){
+    .panel{ width:100%; top:auto; bottom:0; height:auto; max-height:85vh; border-left:none; border-top:1px solid var(--line-strong); border-radius:18px 18px 0 0; transform:translateY(100%); }
+    .panel.open{ transform:translateY(0); }
+    .stats-strip{ gap:16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+
+  /* ---------- auth gate ---------- */
+  .auth-wrap{
+    max-width:340px;
+    margin:80px auto;
+    padding:28px 26px;
+    background:var(--bg-panel);
+    border:1px solid var(--line-strong);
+    border-radius:16px;
+  }
+  .auth-wrap h1{
+    font-family:'Fraunces',serif;
+    font-size:24px;
+    font-weight:700;
+    margin:0 0 4px;
+  }
+  .auth-wrap .auth-sub{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-bottom:20px;
+  }
+  .auth-field{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    margin-bottom:14px;
+  }
+  .auth-field label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--muted);
+  }
+  .auth-field input{
+    background:var(--bg-elevated);
+    border:1px solid var(--line-strong);
+    border-radius:8px;
+    padding:10px 12px;
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+  }
+  .auth-field input:focus-visible{ outline:2px solid var(--mustard); outline-offset:1px; }
+  .auth-submit{
+    width:100%;
+    background:var(--mustard);
+    color:var(--bg);
+    border:none;
+    border-radius:8px;
+    padding:11px 0;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .auth-submit:hover{ filter:brightness(1.06); }
+  .auth-submit:disabled{ opacity:0.6; cursor:default; }
+  .auth-toggle{
+    text-align:center;
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+  .auth-toggle button{
+    background:none; border:none; color:var(--mustard);
+    text-decoration:underline; cursor:pointer; font-size:12.5px; padding:0;
+  }
+  .auth-error{
+    color:var(--terracotta);
+    font-size:12px;
+    margin-top:10px;
+    min-height:14px;
+  }
+  .signout-btn{
+    background:none; border:none; color:var(--muted);
+    font-size:11.5px; text-decoration:underline; cursor:pointer;
+    margin-left:10px;
+  }
+  .signout-btn:hover{ color:var(--cream); }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="loading" id="loading">connecting…</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ---- Paste your Firebase project's web-app config here ----
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+const WEEKDAY_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+const WORKOUTS = {
+  1: { label: 'Lower body + core', hasWalk: false, exercises: [
+      { text: 'Goblet squat — 3×12', demo: 'squat' },
+      { text: 'Dumbbell Romanian deadlift — 3×12', demo: 'rdlHinge' },
+      { text: 'Glute bridge — 3×15', demo: 'gluteBridge' },
+      { text: 'Step-ups — 3×10 each leg', demo: 'stepUp' },
+      { text: 'Plank — 3 rounds', demo: 'plank' }
+    ]},
+  2: { label: 'Walk', hasWalk: true, exercises: [
+      { text: '8,000–10,000 steps (or 45 min brisk walk)', demo: 'walk' }
+    ]},
+  3: { label: 'Upper body', hasWalk: false, exercises: [
+      { text: 'Shoulder press — 3×10', demo: 'shoulderPress' },
+      { text: 'Dumbbell rows — 3×12', demo: 'dbRow' },
+      { text: 'Floor chest press — 3×12', demo: 'floorChestPress' },
+      { text: 'Bicep curls — 3×12', demo: 'bicepCurl' },
+      { text: 'Tricep extensions — 3×12', demo: 'tricepExtension' }
+    ]},
+  4: { label: 'Rest / stretching', hasWalk: false, exercises: [
+      { text: 'Stretching / mobility (e.g. deep squat hold, 2–3 × 30–60s)', demo: 'stretchHold' }
+    ]},
+  5: { label: 'Full body', hasWalk: false, exercises: [
+      { text: 'Squat + press — 3×12', demo: 'squatPress' },
+      { text: 'Deadlift — 3×12', demo: 'rdlHinge' },
+      { text: 'Rows — 3×12', demo: 'dbRow' },
+      { text: 'Lunges (slow, controlled) — 3×10 each leg', demo: 'lunge' },
+      { text: 'Core exercise', demo: 'plank' }
+    ]},
+  6: { label: 'Weekend', hasWalk: true, exercises: [ { text: 'One longer walk / activity', demo: 'walk' } ]},
+  0: { label: 'Weekend', hasWalk: true, exercises: [ { text: 'One longer walk / activity', demo: 'walk' } ]},
+};
+
+// Reusable guide content per movement pattern. `query` builds a YouTube search
+// link so people land on real demonstration videos instead of a drawn animation.
+const EXERCISE_DEMOS = {
+  squat:            { query: 'goblet squat form',                    cues: ['Feet shoulder-width, chest up', 'Send hips back and down', 'Knees track over your toes', 'Drive through your heels to stand'] },
+  rdlHinge:         { query: 'dumbbell romanian deadlift form',       cues: ['Soft knees, hinge at the hips', 'Keep the weight close to your legs', 'Back flat, chest proud', 'Squeeze glutes to stand tall'] },
+  gluteBridge:      { query: 'glute bridge form',                    cues: ['Knees bent, feet flat on the floor', 'Push through your heels', 'Lift hips to a straight line', 'Lower with control'] },
+  stepUp:           { query: 'dumbbell step up form',                cues: ['Full foot on the platform', 'Drive through the front heel', 'Stand tall at the top', 'Step down slow and controlled'] },
+  plank:            { query: 'plank form',                           cues: ['Forearms and toes on the floor', 'Body in one straight line', "Brace your core, don't let hips sag", 'Breathe steadily and hold'] },
+  walk:             { query: 'brisk walking technique',              cues: ['Relaxed shoulders, tall posture', 'Natural arm swing', 'Steady, comfortable pace', 'Land midfoot, roll through'] },
+  shoulderPress:    { query: 'dumbbell shoulder press form',         cues: ['Start with weights at shoulder height', 'Press straight overhead', 'Avoid arching your lower back', 'Lower with control'] },
+  dbRow:            { query: 'dumbbell row form',                    cues: ['Hinge forward, flat back', 'Pull elbows back and up', 'Squeeze shoulder blades together', 'Lower with control'] },
+  floorChestPress:  { query: 'floor chest press dumbbell form',      cues: ['Lie back, knees bent', 'Press weights up above your chest', 'Elbows stop just above the floor', 'Extend fully without locking out'] },
+  bicepCurl:        { query: 'dumbbell bicep curl form',             cues: ['Elbows tucked at your sides', 'Curl up without swinging', 'Squeeze at the top', 'Lower slowly'] },
+  tricepExtension:  { query: 'dumbbell tricep extension form',       cues: ['Upper arms stay still, close to your head', 'Bend at the elbow only', 'Extend fully overhead', 'Lower with control'] },
+  stretchHold:      { query: 'deep squat hold mobility stretch',     cues: ['Sit back into a comfortable deep squat', 'Keep your heels down if you can', 'Relax your shoulders', 'Hold and breathe'] },
+  squatPress:       { query: 'dumbbell squat to press form',         cues: ['Squat down, weights at your shoulders', 'Drive up through your heels', 'Press overhead as you stand', 'Lower weights, then squat again'] },
+  lunge:            { query: 'dumbbell lunge form',                  cues: ['Step forward, lower straight down', 'Front knee stays over the ankle', 'Back knee hovers just above the floor', 'Push back to standing'] },
+};
+
+const DIET_ITEMS = [
+  { text: 'Protein at meals (dal / curd / paneer / whey)', type: 'diet', key: 'protein' },
+  { text: 'Portion awareness (balanced meal, no overeating)', type: 'diet', key: 'portion' }
+];
+
+const OPTIONAL_WALK_ITEM = { text: 'Walk 7,000 steps', type: 'optional' };
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtDate(d){ return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+function isoWeekday(d){ // Monday=0 ... Sunday=6, for grid layout
+  return (d.getDay() + 6) % 7;
+}
+function getChecklist(date){
+  const wd = date.getDay(); // 0=Sun..6=Sat, matches WORKOUTS keys
+  const w = WORKOUTS[wd];
+  const items = w.exercises.map(e => ({ text: e.text, type: 'exercise', demo: e.demo })).concat(DIET_ITEMS);
+  if(!w.hasWalk) items.push(OPTIONAL_WALK_ITEM);
+  return { label: w.label, items };
+}
+
+// Splits a day's checked[] against its items[] into required vs. optional totals.
+function splitByType(items, checked){
+  let workoutChecked = 0, workoutTotal = 0;
+  let requiredChecked = 0, requiredTotal = 0;
+  let optionalChecked = 0, optionalTotal = 0;
+  let protein = false, portion = false;
+  items.forEach((it, i) => {
+    const isChecked = !!checked[i];
+    if(it.type === 'exercise'){
+      workoutTotal++; if(isChecked) workoutChecked++;
+      requiredTotal++; if(isChecked) requiredChecked++;
+    } else if(it.type === 'diet'){
+      requiredTotal++; if(isChecked) requiredChecked++;
+      if(it.key === 'protein') protein = isChecked;
+      if(it.key === 'portion') portion = isChecked;
+    } else if(it.type === 'optional'){
+      optionalTotal++; if(isChecked) optionalChecked++;
+    }
+  });
+  return { workoutChecked, workoutTotal, requiredChecked, requiredTotal, optionalChecked, optionalTotal, protein, portion };
+}
+
+let entries = {}; // date string -> { checked: [bool,...] }
+let storageOk = true;
+let viewYear, viewMonth; // month is 0-indexed
+let selectedDate = null;
+const today = new Date();
+
+let summaryTab = 'week'; // 'week' | 'month'
+let weekOffset = 0;  // 0 = week containing today
+let monthOffsetSummary = 0; // 0 = month containing today
+
+let currentUser = null;
+let appStarted = false;
+let unsubscribeSnapshot = null;
+
+async function saveEntries(){
+  if(!currentUser) return;
+  try{
+    await setDoc(doc(db, 'entries', currentUser.uid), { data: JSON.stringify(entries) });
+    storageOk = true;
+  }catch(e){
+    storageOk = false;
+  }
+}
+
+// Day completion only counts required items (exercises + diet habits);
+// the optional walk task doesn't affect the ring fill, streak, or "fully checked-off" count.
+function dayCompletion(dateStr, date){
+  const rec = entries[dateStr];
+  const { items } = getChecklist(date);
+  const checked = (rec && rec.checked) ? rec.checked : [];
+  const { requiredChecked, requiredTotal } = splitByType(items, checked);
+  return requiredTotal ? requiredChecked / requiredTotal : 0;
+}
+
+function computeStreak(){
+  let streak = 0;
+  let cursor = new Date(today);
+  cursor.setHours(0,0,0,0);
+  while(true){
+    const ds = fmtDate(cursor);
+    const pct = dayCompletion(ds, cursor);
+    if(pct >= 0.999){
+      streak++;
+      cursor.setDate(cursor.getDate()-1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function computeMonthPct(){
+  const y = today.getFullYear(), m = today.getMonth();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  let sum = 0, count = 0;
+  for(let d=1; d<=today.getDate(); d++){
+    const dt = new Date(y,m,d);
+    sum += dayCompletion(fmtDate(dt), dt);
+    count++;
+  }
+  return count ? Math.round((sum/count)*100) : 0;
+}
+
+function render(){
+  const app = document.getElementById('app');
+  const streak = computeStreak();
+  const monthPct = computeMonthPct();
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const leadingBlanks = isoWeekday(firstOfMonth);
+
+  let cells = '';
+  for(let i=0;i<leadingBlanks;i++){
+    cells += `<div class="day-cell empty"></div>`;
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    const dt = new Date(viewYear, viewMonth, d);
+    const ds = fmtDate(dt);
+    const pct = dayCompletion(ds, dt);
+    const isToday = fmtDate(today) === ds;
+    const isSelected = selectedDate === ds;
+    const ringColor = pct >= 0.999 ? 'var(--sage)' : 'var(--mustard)';
+    cells += `
+      <button class="day-cell ${isToday?'today':''} ${isSelected?'selected':''}" data-date="${ds}" aria-label="${monthNames[viewMonth]} ${d}, ${Math.round(pct*100)}% complete">
+        <span class="day-num">${d}</span>
+        <span class="lid" style="--pct:${pct}; --ring-color:${ringColor};">
+          <span class="lid-core"></span>
+        </span>
+      </button>`;
+  }
+
+  app.innerHTML = `
+    <header class="top">
+      <div class="title-block">
+        <h1>Roz Ka Hisaab</h1>
+        <div class="sub">daily workout &amp; habit tracker</div>
+      </div>
+      <div class="stats-strip">
+        <div class="stat"><div class="num">${streak}</div><div class="lbl">day streak</div></div>
+        <div class="stat"><div class="num">${monthPct}%</div><div class="lbl">this month</div></div>
+      </div>
+    </header>
+
+    <div class="month-nav">
+      <div class="month-label">${monthNames[viewMonth]} ${viewYear}</div>
+      <div class="nav-btns">
+        <button class="summary-btn" id="summaryBtn">Summary</button>
+        <button class="today-btn" id="todayBtn">Today</button>
+        <button class="icon-btn" id="prevBtn" aria-label="Previous month">‹</button>
+        <button class="icon-btn" id="nextBtn" aria-label="Next month">›</button>
+      </div>
+    </div>
+
+    <div class="weekday-row">
+      ${WEEKDAY_LABELS.map(w=>`<span>${w}</span>`).join('')}
+    </div>
+    <div class="grid">${cells}</div>
+
+    <div class="legend">
+      <span><span class="legend-dot" style="background:var(--mustard)"></span>in progress</span>
+      <span><span class="legend-dot" style="background:var(--sage)"></span>fully checked off</span>
+      <button class="reset-link" id="resetBtn">clear all data</button>
+    </div>
+  `;
+
+  document.getElementById('prevBtn').onclick = () => { changeMonth(-1); };
+  document.getElementById('nextBtn').onclick = () => { changeMonth(1); };
+  document.getElementById('todayBtn').onclick = () => {
+    viewYear = today.getFullYear(); viewMonth = today.getMonth();
+    selectedDate = fmtDate(today);
+    render();
+    openPanel(selectedDate);
+  };
+  document.getElementById('resetBtn').onclick = onReset;
+  document.getElementById('summaryBtn').onclick = openSummary;
+
+  app.querySelectorAll('.day-cell[data-date]').forEach(cell => {
+    cell.onclick = () => {
+      selectedDate = cell.getAttribute('data-date');
+      render();
+      openPanel(selectedDate);
+    };
+  });
+
+  renderPanel();
+  addSignOutControl();
+}
+
+function changeMonth(delta){
+  viewMonth += delta;
+  if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+  if(viewMonth > 11){ viewMonth = 0; viewYear++; }
+  render();
+}
+
+let panelEl, overlayEl;
+function ensurePanelDom(){
+  if(panelEl) return;
+  overlayEl = document.createElement('div');
+  overlayEl.className = 'panel-overlay';
+  overlayEl.onclick = closePanel;
+  document.body.appendChild(overlayEl);
+
+  panelEl = document.createElement('div');
+  panelEl.className = 'panel';
+  document.body.appendChild(panelEl);
+}
+
+function openPanel(dateStr){
+  ensurePanelDom();
+  overlayEl.classList.add('open');
+  panelEl.classList.add('open');
+  renderPanel();
+}
+function closePanel(){
+  if(!panelEl) return;
+  overlayEl.classList.remove('open');
+  panelEl.classList.remove('open');
+  selectedDate = null;
+}
+
+function renderPanel(){
+  if(!panelEl || !selectedDate) return;
+  const [y,m,d] = selectedDate.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const { label, items } = getChecklist(dt);
+  const rec = entries[selectedDate] || { checked: items.map(()=>false) };
+  if(rec.checked.length !== items.length){
+    rec.checked = items.map((_,i)=> !!rec.checked[i]);
+  }
+  const dateFmt = dt.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const stats = splitByType(items, rec.checked);
+
+  const requiredItems = items.map((it,i)=>({it,i})).filter(x => x.it.type !== 'optional');
+  const optionalItems = items.map((it,i)=>({it,i})).filter(x => x.it.type === 'optional');
+
+  const rowHtml = ({it,i}) => `
+    <div class="check-row" data-idx="${i}">
+      <span class="checkbox ${rec.checked[i] ? 'checked':''}" role="checkbox" aria-checked="${!!rec.checked[i]}" tabindex="0"></span>
+      <span class="check-label ${rec.checked[i]?'done':''}">${it.text}</span>
+      ${it.demo ? `<button class="demo-btn" data-demo="${it.demo}" data-name="${it.text.replace(/"/g,'&quot;')}" aria-label="Show how to do ${it.text.replace(/"/g,'&quot;')}">▶ how</button>` : ''}
+    </div>`;
+
+  panelEl.innerHTML = `
+    <div class="panel-head">
+      <div>
+        <div class="panel-date">${dateFmt}</div>
+        <div class="panel-workout">${label}</div>
+      </div>
+      <button class="close-btn" id="panelClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="section-label">Checklist</div>
+    <div class="checklist">
+      ${requiredItems.map(rowHtml).join('')}
+    </div>
+
+    ${optionalItems.length ? `
+      <div class="section-label">Optional</div>
+      <div class="checklist">
+        ${optionalItems.map(rowHtml).join('')}
+      </div>
+    ` : ''}
+
+    <div class="panel-footer">
+      <span>Checked off</span>
+      <b>${stats.requiredChecked} / ${stats.requiredTotal}${stats.optionalTotal ? ` <span style="color:var(--muted);font-weight:400;">+ ${stats.optionalChecked}/${stats.optionalTotal} bonus</span>` : ''}</b>
+    </div>
+    ${!storageOk ? `<div style="margin-top:10px;color:var(--terracotta);font-size:11.5px;">Couldn't save last change — check your connection and try again.</div>` : ''}
+  `;
+
+  panelEl.querySelector('#panelClose').onclick = closePanel;
+  panelEl.querySelectorAll('.check-row').forEach(row => {
+    const toggle = async () => {
+      const idx = Number(row.getAttribute('data-idx'));
+      rec.checked[idx] = !rec.checked[idx];
+      entries[selectedDate] = rec;
+      renderPanel();
+      renderCalendarOnly();
+      if(summaryOverlayEl && summaryOverlayEl.classList.contains('open')) renderSummary();
+      await saveEntries();
+      renderPanel(); // reflect any storage-error banner
+    };
+    row.onclick = (e) => { if(e.target.closest('.demo-btn')) return; toggle(); };
+    const box = row.querySelector('.checkbox');
+    box.onkeydown = (e) => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); } };
+  });
+  panelEl.querySelectorAll('.demo-btn').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      openDemo(btn.getAttribute('data-demo'), btn.getAttribute('data-name'));
+    };
+  });
+}
+
+// re-render just the calendar grid (used after a checklist toggle) without
+// rebuilding the whole app / losing panel state
+function renderCalendarOnly(){
+  const gridWrap = document.querySelector('.grid');
+  const statsWrap = document.querySelector('.stats-strip');
+  if(!gridWrap) return;
+  const streak = computeStreak();
+  const monthPct = computeMonthPct();
+  if(statsWrap){
+    statsWrap.innerHTML = `
+      <div class="stat"><div class="num">${streak}</div><div class="lbl">day streak</div></div>
+      <div class="stat"><div class="num">${monthPct}%</div><div class="lbl">this month</div></div>`;
+  }
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const leadingBlanks = isoWeekday(firstOfMonth);
+  let cells = '';
+  for(let i=0;i<leadingBlanks;i++){ cells += `<div class="day-cell empty"></div>`; }
+  for(let d=1; d<=daysInMonth; d++){
+    const dt = new Date(viewYear, viewMonth, d);
+    const ds = fmtDate(dt);
+    const pct = dayCompletion(ds, dt);
+    const isToday = fmtDate(today) === ds;
+    const isSelected = selectedDate === ds;
+    const ringColor = pct >= 0.999 ? 'var(--sage)' : 'var(--mustard)';
+    cells += `
+      <button class="day-cell ${isToday?'today':''} ${isSelected?'selected':''}" data-date="${ds}">
+        <span class="day-num">${d}</span>
+        <span class="lid" style="--pct:${pct}; --ring-color:${ringColor};">
+          <span class="lid-core"></span>
+        </span>
+      </button>`;
+  }
+  gridWrap.innerHTML = cells;
+  gridWrap.querySelectorAll('.day-cell[data-date]').forEach(cell => {
+    cell.onclick = () => {
+      selectedDate = cell.getAttribute('data-date');
+      render();
+      openPanel(selectedDate);
+    };
+  });
+}
+
+async function onReset(){
+  const sure = confirm('Clear all tracked days? This cannot be undone.');
+  if(!sure) return;
+  entries = {};
+  await saveEntries();
+  closePanel();
+  render();
+}
+
+// ---------- exercise demo (links to real form videos) ----------
+let demoOverlayEl, demoModalEl;
+let currentDemoKey = null, currentDemoName = '';
+
+function ensureDemoDom(){
+  if(demoModalEl) return;
+  demoOverlayEl = document.createElement('div');
+  demoOverlayEl.className = 'demo-overlay';
+  demoOverlayEl.onclick = (e) => { if(e.target === demoOverlayEl) closeDemo(); };
+  demoModalEl = document.createElement('div');
+  demoModalEl.className = 'demo-modal';
+  demoOverlayEl.appendChild(demoModalEl);
+  document.body.appendChild(demoOverlayEl);
+}
+
+function openDemo(key, name){
+  const demo = EXERCISE_DEMOS[key];
+  if(!demo) return;
+  ensureDemoDom();
+  currentDemoKey = key;
+  currentDemoName = name;
+  demoOverlayEl.classList.add('open');
+  renderDemo();
+}
+function closeDemo(){
+  if(!demoOverlayEl) return;
+  demoOverlayEl.classList.remove('open');
+  currentDemoKey = null;
+}
+
+function renderDemo(){
+  if(!demoModalEl || !currentDemoKey) return;
+  const demo = EXERCISE_DEMOS[currentDemoKey];
+  const videoUrl = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(demo.query);
+
+  demoModalEl.innerHTML = `
+    <div class="demo-head">
+      <div class="demo-title">${currentDemoName}</div>
+      <button class="close-btn" id="demoClose" aria-label="Close">✕</button>
+    </div>
+    <a class="demo-video-box" href="${videoUrl}" target="_blank" rel="noopener noreferrer">
+      <span class="demo-video-icon">▶</span>
+      <span class="demo-video-text">
+        <span class="demo-video-title">Watch real demo videos</span>
+        <span class="demo-video-sub">Opens a YouTube search for "${demo.query}" in a new tab</span>
+      </span>
+      <span class="demo-video-arrow">↗</span>
+    </a>
+    <div class="demo-section-label">Form cues</div>
+    <ul class="demo-cues">
+      ${demo.cues.map(c => `<li>${c}</li>`).join('')}
+    </ul>
+  `;
+  demoModalEl.querySelector('#demoClose').onclick = closeDemo;
+}
+
+// ---------- summary ----------
+function startOfDay(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+
+function getWeekRange(offset){
+  const now = startOfDay(today);
+  const wd = isoWeekday(now); // 0=Mon..6=Sun
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - wd + offset*7);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return { start: monday, end: sunday };
+}
+
+function getMonthRange(offset){
+  const d = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+  const start = new Date(d.getFullYear(), d.getMonth(), 1);
+  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  return { start, end };
+}
+
+function statsForRange(start, end){
+  const days = [];
+  const cursor = new Date(start);
+  while(cursor <= end){
+    days.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  const todayMid = startOfDay(today);
+  let sumPct = 0, sumWorkout = 0, proteinDays = 0, portionDays = 0, fullDays = 0, countedDays = 0;
+  let optionalApplicableDays = 0, optionalCompletedDays = 0;
+
+  const dayRows = days.map(dt => {
+    const ds = fmtDate(dt);
+    const { items } = getChecklist(dt);
+    const rec = entries[ds];
+    const checked = (rec && rec.checked) ? rec.checked : items.map(() => false);
+    const s = splitByType(items, checked);
+    const workoutPct = s.workoutTotal ? s.workoutChecked / s.workoutTotal : 0;
+    const pct = s.requiredTotal ? s.requiredChecked / s.requiredTotal : 0;
+    const isFuture = dt > todayMid;
+
+    if(!isFuture){
+      countedDays++;
+      sumPct += pct;
+      sumWorkout += workoutPct;
+      if(s.protein) proteinDays++;
+      if(s.portion) portionDays++;
+      if(pct >= 0.999) fullDays++;
+      if(s.optionalTotal){
+        optionalApplicableDays++;
+        if(s.optionalChecked) optionalCompletedDays++;
+      }
+    }
+    return { date: dt, ds, pct, workoutPct, protein: s.protein, portion: s.portion, isFuture };
+  });
+
+  return {
+    days: dayRows,
+    avgPct: countedDays ? Math.round((sumPct / countedDays) * 100) : null,
+    workoutAvgPct: countedDays ? Math.round((sumWorkout / countedDays) * 100) : null,
+    proteinDays, portionDays, fullDays, countedDays,
+    optionalApplicableDays, optionalCompletedDays,
+    totalDays: days.length
+  };
+}
+
+function fmtRangeLabel(start, end, tab){
+  const opts = { month: 'short', day: 'numeric' };
+  if(tab === 'month'){
+    return start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+  const sameYear = start.getFullYear() === end.getFullYear();
+  const startStr = start.toLocaleDateString('en-US', opts);
+  const endStr = end.toLocaleDateString('en-US', sameYear ? opts : { ...opts, year: 'numeric' });
+  return `${startStr} – ${endStr}, ${end.getFullYear()}`;
+}
+
+let summaryOverlayEl, summaryModalEl;
+function ensureSummaryDom(){
+  if(summaryModalEl) return;
+  summaryOverlayEl = document.createElement('div');
+  summaryOverlayEl.className = 'summary-overlay';
+  summaryOverlayEl.onclick = (e) => { if(e.target === summaryOverlayEl) closeSummary(); };
+  summaryModalEl = document.createElement('div');
+  summaryModalEl.className = 'summary-modal';
+  summaryOverlayEl.appendChild(summaryModalEl);
+  document.body.appendChild(summaryOverlayEl);
+}
+
+function openSummary(){
+  ensureSummaryDom();
+  summaryOverlayEl.classList.add('open');
+  renderSummary();
+}
+function closeSummary(){
+  if(!summaryOverlayEl) return;
+  summaryOverlayEl.classList.remove('open');
+}
+
+function renderSummary(){
+  if(!summaryModalEl) return;
+  const range = summaryTab === 'week' ? getWeekRange(weekOffset) : getMonthRange(monthOffsetSummary);
+  const stats = statsForRange(range.start, range.end);
+  const rangeLabel = fmtRangeLabel(range.start, range.end, summaryTab);
+  const offset = summaryTab === 'week' ? weekOffset : monthOffsetSummary;
+  const dayLabelFmt = summaryTab === 'week'
+    ? (d => d.toLocaleDateString('en-US', { weekday: 'short' }))
+    : (d => d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }));
+
+  const barsHtml = stats.countedDays === 0 && stats.days.every(d => d.isFuture)
+    ? `<div class="summary-empty">This period hasn't started yet.</div>`
+    : stats.days.map(d => `
+        <div class="day-bar-row ${d.isFuture ? 'future' : ''}">
+          <span class="day-bar-label">${dayLabelFmt(d.date)}</span>
+          <span class="day-bar-track"><span class="day-bar-fill ${d.pct >= 0.999 ? 'full' : ''}" style="width:${Math.round(d.pct*100)}%"></span></span>
+          <span class="day-bar-pct">${d.isFuture ? '—' : Math.round(d.pct*100) + '%'}</span>
+        </div>`).join('');
+
+  summaryModalEl.innerHTML = `
+    <div class="summary-head">
+      <div class="summary-title">Summary</div>
+      <button class="close-btn" id="summaryClose" aria-label="Close">✕</button>
+    </div>
+    <div class="summary-tabs">
+      <button class="summary-tab ${summaryTab==='week'?'active':''}" data-tab="week">Weekly</button>
+      <button class="summary-tab ${summaryTab==='month'?'active':''}" data-tab="month">Monthly</button>
+    </div>
+    <div class="summary-range">
+      <button class="icon-btn" id="summaryPrev" aria-label="Previous period">‹</button>
+      <span class="summary-range-label">${rangeLabel}</span>
+      <button class="icon-btn" id="summaryNext" aria-label="Next period" ${offset>=0?'disabled style="opacity:.35;cursor:default;"':''}>›</button>
+    </div>
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="num">${stats.avgPct===null ? '—' : stats.avgPct+'%'}</div>
+        <div class="lbl">avg. daily completion</div>
+      </div>
+      <div class="summary-card">
+        <div class="num">${stats.fullDays} / ${stats.countedDays}</div>
+        <div class="lbl">fully checked-off days</div>
+      </div>
+      <div class="summary-card">
+        <div class="num">${stats.workoutAvgPct===null ? '—' : stats.workoutAvgPct+'%'}</div>
+        <div class="lbl">workout completion</div>
+      </div>
+      <div class="summary-card">
+        <div class="num">${stats.countedDays ? Math.round((stats.proteinDays/stats.countedDays)*100) : '—'}%</div>
+        <div class="lbl">protein at meals</div>
+      </div>
+    </div>
+    ${stats.optionalApplicableDays ? `
+      <div class="summary-empty" style="margin-bottom:16px;padding:0;">
+        Bonus 7,000-step walk logged on <b style="color:var(--cream);font-family:'IBM Plex Mono',monospace;font-weight:500;">${stats.optionalCompletedDays} / ${stats.optionalApplicableDays}</b> eligible days.
+      </div>
+    ` : ''}
+    <div class="summary-section-label">Day by day</div>
+    ${barsHtml}
+  `;
+
+  summaryModalEl.querySelector('#summaryClose').onclick = closeSummary;
+  summaryModalEl.querySelectorAll('.summary-tab').forEach(btn => {
+    btn.onclick = () => { summaryTab = btn.getAttribute('data-tab'); renderSummary(); };
+  });
+  summaryModalEl.querySelector('#summaryPrev').onclick = () => {
+    if(summaryTab === 'week') weekOffset -= 1; else monthOffsetSummary -= 1;
+    renderSummary();
+  };
+  const nextBtn = summaryModalEl.querySelector('#summaryNext');
+  nextBtn.onclick = () => {
+    if(summaryTab === 'week' && weekOffset < 0){ weekOffset += 1; renderSummary(); }
+    if(summaryTab === 'month' && monthOffsetSummary < 0){ monthOffsetSummary += 1; renderSummary(); }
+  };
+}
+
+// ---------- auth gate ----------
+let authMode = 'signin'; // 'signin' | 'signup'
+
+function renderAuthGate(errorMsg){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="auth-wrap">
+      <h1>Roz Ka Hisaab</h1>
+      <div class="auth-sub">${authMode === 'signin' ? 'Sign in to sync your tracker across devices.' : 'Create an account to start tracking.'}</div>
+      <form id="authForm">
+        <div class="auth-field">
+          <label for="authEmail">Email</label>
+          <input id="authEmail" type="email" autocomplete="email" required />
+        </div>
+        <div class="auth-field">
+          <label for="authPassword">Password</label>
+          <input id="authPassword" type="password" autocomplete="${authMode==='signin'?'current-password':'new-password'}" minlength="6" required />
+        </div>
+        <button class="auth-submit" type="submit" id="authSubmit">${authMode === 'signin' ? 'Sign in' : 'Create account'}</button>
+        <div class="auth-error" id="authError">${errorMsg || ''}</div>
+      </form>
+      <div class="auth-toggle">
+        ${authMode === 'signin'
+          ? `New here? <button id="authToggle">Create an account</button>`
+          : `Already have an account? <button id="authToggle">Sign in</button>`}
+      </div>
+    </div>
+  `;
+  document.getElementById('authToggle').onclick = () => {
+    authMode = authMode === 'signin' ? 'signup' : 'signin';
+    renderAuthGate();
+  };
+  document.getElementById('authForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const submitBtn = document.getElementById('authSubmit');
+    submitBtn.disabled = true;
+    try{
+      if(authMode === 'signin'){
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+      // onAuthStateChanged picks up the signed-in user and starts the app.
+    }catch(err){
+      submitBtn.disabled = false;
+      document.getElementById('authError').textContent = friendlyAuthError(err);
+    }
+  };
+}
+
+function friendlyAuthError(err){
+  const code = err && err.code || '';
+  if(code.includes('email-already-in-use')) return 'That email already has an account — try signing in instead.';
+  if(code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Email or password is incorrect.';
+  if(code.includes('weak-password')) return 'Password should be at least 6 characters.';
+  if(code.includes('invalid-email')) return 'That email address looks invalid.';
+  return 'Something went wrong — please try again.';
+}
+
+function startApp(){
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
+  appStarted = false;
+  if(unsubscribeSnapshot) unsubscribeSnapshot();
+  unsubscribeSnapshot = onSnapshot(
+    doc(db, 'entries', currentUser.uid),
+    (snap) => {
+      entries = (snap.exists() && snap.data().data) ? JSON.parse(snap.data().data) : {};
+      storageOk = true;
+      if(!appStarted){
+        appStarted = true;
+        render();
+      } else {
+        renderCalendarOnly();
+        if(selectedDate && panelEl) renderPanel();
+        if(summaryOverlayEl && summaryOverlayEl.classList.contains('open')) renderSummary();
+      }
+    },
+    () => {
+      storageOk = false;
+      if(!appStarted){ appStarted = true; entries = {}; render(); }
+    }
+  );
+}
+
+function addSignOutControl(){
+  const strip = document.querySelector('.stats-strip');
+  if(!strip || document.getElementById('signOutBtn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'signOutBtn';
+  btn.className = 'signout-btn';
+  btn.textContent = 'Sign out';
+  btn.onclick = async () => {
+    if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+    await signOut(auth);
+  };
+  strip.appendChild(btn);
+}
+
+onAuthStateChanged(auth, (user) => {
+  if(user){
+    currentUser = user;
+    startApp();
+  } else {
+    currentUser = null;
+    if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+    authMode = 'signin';
+    renderAuthGate();
+  }
+});
+</script>
+</body>
+</html>
