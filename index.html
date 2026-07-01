@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Roz Ka Hisaab</title>
+<title>AJ's Daily Routine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -695,12 +695,12 @@ import {
 
 // ---- Paste your Firebase project's web-app config here ----
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAZVgWVRhf5yZil6KvpUFj7JtHJhleF094",
+  authDomain: "daily-exercise-routine-3b637.firebaseapp.com",
+  projectId: "daily-exercise-routine-3b637",
+  storageBucket: "daily-exercise-routine-3b637.firebasestorage.app",
+  messagingSenderId: "703248142346",
+  appId: "1:703248142346:web:fa8fee46fffc78054c8ff3"
 };
 
 const fbApp = initializeApp(firebaseConfig);
@@ -898,7 +898,7 @@ function render(){
   app.innerHTML = `
     <header class="top">
       <div class="title-block">
-        <h1>Roz Ka Hisaab</h1>
+        <h1>AJ's Daily Routine</h1>
         <div class="sub">daily workout &amp; habit tracker</div>
       </div>
       <div class="stats-strip">
@@ -1348,7 +1348,7 @@ function renderAuthGate(errorMsg){
   const app = document.getElementById('app');
   app.innerHTML = `
     <div class="auth-wrap">
-      <h1>Roz Ka Hisaab</h1>
+      <h1>AJ's Daily Routine</h1>
       <div class="auth-sub">${authMode === 'signin' ? 'Sign in to sync your tracker across devices.' : 'Create an account to start tracking.'}</div>
       <form id="authForm">
         <div class="auth-field">

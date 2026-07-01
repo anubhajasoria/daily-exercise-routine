@@ -1,4 +1,4 @@
-# Roz Ka Hisaab
+# AJ's Daily Routine
 
 A single-page daily workout &amp; habit tracker, built around a specific weekly strength
 plan (lower body, walk, upper body, rest/stretch, full body, weekend activity), plus
